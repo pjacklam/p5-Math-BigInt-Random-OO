@@ -1,9 +1,9 @@
 # -*- mode: perl; coding: utf-8-unix; -*-
 #
 # Author:      Peter J. Acklam
-# Time-stamp:  2010-02-16 12:31:50 +01:00
+# Time-stamp:  2010-02-20 10:12:49 +01:00
 # E-mail:      pjacklam@online.no
-# URL:         http://home.online.no/~pjacklam
+# URL:	       http://home.online.no/~pjacklam
 
 package Math::BigInt::Random::OO;
 
@@ -11,11 +11,10 @@ package Math::BigInt::Random::OO;
 ## Modules and general package variables.
 ###############################################################################
 
-use 5.008;
-
-use strict;                     # restrict unsafe constructs
-use warnings;                   # control optional warnings
-use utf8;
+use 5.008;              # required version of Perl
+use strict;             # restrict unsafe constructs
+use warnings;           # control optional warnings
+use utf8;               # enable UTF-8 in source code
 
 # Modules from the Standard Perl Library.
 
@@ -28,8 +27,7 @@ use Math::BigInt;
 # Package variables.
 ###############################################################################
 
-our $VERSION = 0.01;
-our $base = 1;
+our $VERSION = 0.02;
 
 =pod
 
@@ -44,15 +42,15 @@ Math::BigInt::Random::OO - generate uniformly distributed Math::BigInt objects
   # Random numbers between 1e20 and 2e30:
 
   my $gen = Math::BigInt::Random::OO -> new(min => "1e20",
-                                            min => "2e30");
-  $x = $gen -> generate();      # one number
-  $x = $gen -> generate(1);     # ditto
-  @x = $gen -> generate(100);   # 100 numbers
+					    min => "2e30");
+  $x = $gen -> generate();	# one number
+  $x = $gen -> generate(1);	# ditto
+  @x = $gen -> generate(100);	# 100 numbers
 
   # Random numbers with size fitting 20 hexadecimal digits:
 
   my $gen = Math::BigInt::Random::OO -> new(length => 20,
-                                            base => 16);
+					    base => 16);
   @x = $gen -> generate(100);
 
 =head1 ABSTRACT
@@ -74,8 +72,8 @@ Math::BigInt objects.
 =item CLASS -E<gt> new ( ... )
 
 Returns a new C<Math::BigInt::Random::OO> random number generator object. The
-arguments are given in the "hash style", as shown in the following example
-which constructs a generator for random numbers in the range from -2 to 3,
+arguments are given in the “hash style”, as shown in the following example
+which constructs a generator for random numbers in the range from –2 to 3,
 inclusive.
 
   my $gen = Math::BigInt::Random::OO -> new(min => -2, max => 3);
@@ -139,10 +137,10 @@ cases are equivalent
 =cut
 
 sub new {
-    my $proto    = shift;
+    my $proto	 = shift;
     my $protoref = ref $proto;
-    my $class    = $protoref || $proto;
-    my $name     = 'new';
+    my $class	 = $protoref || $proto;
+    my $name	 = 'new';
 
     # Check how the method is called.
 
@@ -151,7 +149,7 @@ sub new {
 
     # Check the number of input arguments.
 
-    croak "$name(): not enough input arguments"      if @_ < 1;
+    croak "$name(): not enough input arguments"	     if @_ < 1;
     croak "$name(): odd number of input arguments"   if @_ % 2;
 
     # Check the context.
@@ -162,92 +160,92 @@ sub new {
     # Initialize the new object.
 
     my $self = {
-                min       => undef,
-                max       => undef,
-                length    => undef,
-                base      => 10,
-               };
+		min	  => undef,
+		max	  => undef,
+		length	  => undef,
+		base	  => 10,
+	       };
 
     # Get the input arguments.
 
     while (@_) {
-        my $key = shift;
-        my $val = shift;
+	my $key = shift;
+	my $val = shift;
 
-        # The minimum value, i.e., lower bound.
+	# The minimum value, i.e., lower bound.
 
-        if ($key eq 'min') {
-            croak "$name(): minimum value can't be undefined"
-              unless defined $val;
-            $val = Math::BigInt -> new($val)
-              unless UNIVERSAL::isa($val, 'Math::BigInt');
-            croak "$name(): minimum is not a valid number"
-              if $val -> is_nan();
-            $self -> {min} = $val -> as_int();
-            next;
-        }
+	if ($key eq 'min') {
+	    croak "$name(): minimum value can't be undefined"
+	      unless defined $val;
+	    $val = Math::BigInt -> new($val)
+	      unless UNIVERSAL::isa($val, 'Math::BigInt');
+	    croak "$name(): minimum is not a valid number"
+	      if $val -> is_nan();
+	    $self -> {min} = $val -> as_int();
+	    next;
+	}
 
-        # The maximum value, i.e., upper bound.
+	# The maximum value, i.e., upper bound.
 
-        if ($key eq 'max') {
-            croak "$name(): maximum value can't be undefined"
-              unless defined $val;
-            $val = Math::BigInt -> new($val)
-              unless UNIVERSAL::isa($val, 'Math::BigInt');
-            croak "$name(): maximum is not a valid number"
-              if $val -> is_nan();
-            $self -> {max} = $val -> as_int();
-            next;
-        }
+	if ($key eq 'max') {
+	    croak "$name(): maximum value can't be undefined"
+	      unless defined $val;
+	    $val = Math::BigInt -> new($val)
+	      unless UNIVERSAL::isa($val, 'Math::BigInt');
+	    croak "$name(): maximum is not a valid number"
+	      if $val -> is_nan();
+	    $self -> {max} = $val -> as_int();
+	    next;
+	}
 
-        # The length for the given base.
+	# The length for the given base.
 
-        if ($key eq 'length') {
-            croak "$name(): length value can't be undefined"
-              unless defined $val;
-            croak "$name(): length value must be positive"
-              unless $val > 0;
-            $self -> {length} = $val;
-            $self -> {base}   = 10;
-            next;
-        }
+	if ($key eq 'length') {
+	    croak "$name(): length value can't be undefined"
+	      unless defined $val;
+	    croak "$name(): length value must be positive"
+	      unless $val > 0;
+	    $self -> {length} = $val;
+	    $self -> {base}   = 10;
+	    next;
+	}
 
-        # The base used when computing the length.
+	# The base used when computing the length.
 
-        if ($key eq 'base') {
-            croak "$name(): base value can't be undefined"
-              unless defined $val;
-            croak "$name(): base value must be positive"
-              unless $val > 0;
-            $self -> {base} = $val;
-            next;
-        }
+	if ($key eq 'base') {
+	    croak "$name(): base value can't be undefined"
+	      unless defined $val;
+	    croak "$name(): base value must be positive"
+	      unless $val > 0;
+	    $self -> {base} = $val;
+	    next;
+	}
 
-        # The length with an implicit base 16.
+	# The length with an implicit base 16.
 
-        if ($key eq 'length_hex') {
-            croak "$name(): length_hex value can't be undefined"
-              unless defined $val;
-            croak "$name(): length_hex value must be positive"
-              unless $val > 0;
-            $self -> {length} = $val;
-            $self -> {base}   = 16;
-            next;
-        }
+	if ($key eq 'length_hex') {
+	    croak "$name(): length_hex value can't be undefined"
+	      unless defined $val;
+	    croak "$name(): length_hex value must be positive"
+	      unless $val > 0;
+	    $self -> {length} = $val;
+	    $self -> {base}   = 16;
+	    next;
+	}
 
-        # The length with an implicit base 2.
+	# The length with an implicit base 2.
 
-        if ($key eq 'length_bin') {
-            croak "$name(): length_bin value can't be undefined"
-              unless defined $val;
-            croak "$name(): length_bin value must be positive"
-              unless $val > 0;
-            $self -> {length} = $val;
-            $self -> {base}   = 2;
-            next;
-        }
+	if ($key eq 'length_bin') {
+	    croak "$name(): length_bin value can't be undefined"
+	      unless defined $val;
+	    croak "$name(): length_bin value must be positive"
+	      unless $val > 0;
+	    $self -> {length} = $val;
+	    $self -> {base}   = 2;
+	    next;
+	}
 
-        croak "$name(): unknown parameter -- $key\n";
+	croak "$name(): unknown parameter -- $key\n";
     }
 
     # If the maximum value is given, use that. If the length is given, compute
@@ -259,35 +257,35 @@ sub new {
 
     if (defined $self->{max}) {
 
-        if (defined $self->{length}) {
-            carp "$name(): 'max' is given, so 'length' is ignored";
-        }
-        if (! defined $self->{min}) {
-            $self->{min} = 0,
-        }
+	if (defined $self->{length}) {
+	    carp "$name(): 'max' is given, so 'length' is ignored";
+	}
+	if (! defined $self->{min}) {
+	    $self->{min} = 0,
+	}
 
-        croak "$name(): maximum can't be smaller than minimum"
-          if $self->{max} < $self->{min};
+	croak "$name(): maximum can't be smaller than minimum"
+	  if $self->{max} < $self->{min};
 
     } else {
 
-        if (defined $self->{length}) {
-            my $base = $self -> {base};
-            my $len  = $self -> {length};
-            $self->{min} = Math::BigInt -> new($base) -> bpow($len - 1);
-            $self->{max} = $self->{min} -> copy() -> bmul($base) -> bsub(1);
-        } else {
-            croak "$name(): either 'max' or 'length' must be given\n";
-        }
+	if (defined $self->{length}) {
+	    my $base = $self -> {base};
+	    my $len  = $self -> {length};
+	    $self->{min} = Math::BigInt -> new($base) -> bpow($len - 1);
+	    $self->{max} = $self->{min} -> copy() -> bmul($base) -> bsub(1);
+	} else {
+	    croak "$name(): either 'max' or 'length' must be given\n";
+	}
 
     }
 
     # The value of $rand_mult * CORE::rand() is a random integer X in the range
     # 0 <= X < 2 ** $rand_bits.
 
-    my $range     = $self->{max} - $self->{min};
+    my $range	  = $self->{max} - $self->{min};
     my $rand_bits = $Config{randbits};
-    my $rand_mult = 2 ** $rand_bits;            # multiplier
+    my $rand_mult = 2 ** $rand_bits;		# multiplier
 
     # How many chunks, each of size $rand_bits bits, do we need? And what is
     # the size of the highest chunk.
@@ -295,8 +293,8 @@ sub new {
     my $chunks = 1;
     my $hi_range = $range -> copy();
     while ($hi_range >= $rand_mult) {
-        $hi_range /= $rand_mult;
-        ++ $chunks;
+	$hi_range /= $rand_mult;
+	++ $chunks;
     }
 
     # How many bits in the highest (top) chunk?
@@ -304,16 +302,16 @@ sub new {
     my $hi_bits = 0;
     my $tmp = $hi_range -> copy();
     while ($tmp > 0) {
-        $tmp /= 2;
-        ++ $hi_bits;
+	$tmp /= 2;
+	++ $hi_bits;
     }
 
     # Save these, since they are needed to generate the random numbers.
 
-    $self->{_chunks}         = $chunks;
-    $self->{_range}          = $range;
+    $self->{_chunks}	     = $chunks;
+    $self->{_range}	     = $range;
     $self->{_range_high}     = $hi_range -> numify();
-    $self->{_rand_mult}      = $rand_mult;
+    $self->{_rand_mult}	     = $rand_mult;
     $self->{_rand_mult_high} = 2 ** $hi_bits;
 
     ###########################################################################
@@ -339,10 +337,10 @@ argument is given.
 =cut
 
 sub generate {
-    my $self    = shift;
+    my $self	= shift;
     my $selfref = ref $self;
-    my $class   = $selfref || $self;
-    my $name    = 'generate';
+    my $class	= $selfref || $self;
+    my $name	= 'generate';
 
     # Check how the method is called.
 
@@ -352,17 +350,17 @@ sub generate {
     # Check number of input arguments.
 
     #croak "$name(): not enough input arguments" if @_ < 1;
-    croak "$name(): too many input arguments"   if @_ > 1;
+    croak "$name(): too many input arguments"	if @_ > 1;
 
     # Get the count;
 
     my $count = 1;
     if (@_) {
-        $count = shift;
-        croak "$name(): input argument must be defined"
-          unless defined $count;
-        croak "$name(): input argument must be an integer"
-          unless $count = int $count;
+	$count = shift;
+	croak "$name(): input argument must be defined"
+	  unless defined $count;
+	croak "$name(): input argument must be an integer"
+	  unless $count = int $count;
     }
 
     # Generate the random numbers.
@@ -370,29 +368,29 @@ sub generate {
     my @num;
 
     for (1 .. $count) {
-        my $num;
+	my $num;
 
-        do {
-            $num = 0;
+	do {
+	    $num = 0;
 
-            # Generate the highest (top) digits.
+	    # Generate the highest (top) digits.
 
-            $num = int CORE::rand $self->{_rand_mult_high};
+	    $num = int CORE::rand $self->{_rand_mult_high};
 
-            $num = Math::BigInt -> new($num);
+	    $num = Math::BigInt -> new($num);
 
-            # Generate the chunks of lower digits.
+	    # Generate the chunks of lower digits.
 
-            for (2 .. $self->{_chunks}) {
-                $num *=            $self->{_rand_mult};
-                $num += CORE::rand $self->{_rand_mult};
-            }
+	    for (2 .. $self->{_chunks}) {
+		$num *=		   $self->{_rand_mult};
+		$num += CORE::rand $self->{_rand_mult};
+	    }
 
-        } until $num <= $self->{_range};
+	} until $num <= $self->{_range};
 
-        $num += $self->{min};
+	$num += $self->{min};
 
-        push @num, $num;
+	push @num, $num;
     }
 
     return @num if wantarray;
@@ -509,9 +507,9 @@ alternates between 0 and 1 deterministically.
 There are currently no known bugs.
 
 Please report any bugs or feature requests to
-C<bug-math::bigint::random::oo at rt.cpan.org>, or through the web interface
-at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Math-BigInt-Random-OO>.
-I will be notified, and then you'll automatically be notified of progress on
+C<bug-math-bigint-random-oo at rt.cpan.org>, or through the web interface
+at L<http://rt.cpan.org/Public/Bug/Report.html?Queue=Math-BigInt-Random-OO>
+I will be notified, and then you’ll automatically be notified of progress on
 your bug as I make changes.
 
 =head1 SUPPORT
@@ -526,19 +524,31 @@ You can also look for information at:
 
 =item * RT: CPAN’s request tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Math-BigInt-Random-OO>
+L<http://rt.cpan.org/Public/Dist/Display.html?Name=Math-BigInt-Random-OO>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
-L<http://annocpan.org/dist/Math-BigInt-Random-OO>
+L<http://annocpan.org/~PJACKLAM/Math-BigInt-Random-OO>
+
+=item * AnnoCPAN: HTML-formatted POD
+
+L<http://annocpan.org/~PJACKLAM/Math-BigInt-Random-OO-0.01/lib/Math/BigInt/Random/OO.pm>
 
 =item * CPAN Ratings
 
-L<http://cpanratings.perl.org/d/Math-BigInt-Random-OO>
+L<http://cpanratings.perl.org/dist/Math-BigInt-Random-OO>
 
 =item * Search CPAN
 
 L<http://search.cpan.org/dist/Math-BigInt-Random-OO>
+
+=item * CPAN Testers PASS Matrix
+
+L<http://www.cpantesters.org/distro/M/Math-BigInt-Random-OO.html>
+
+=item * CPAN Testers Reports
+
+L<http://www.cpantesters.org/distro/M/Math-BigInt-Random-OO.html>
 
 =back
 
@@ -560,4 +570,4 @@ at your option, any later version of Perl 5 you may have available.
 
 =cut
 
-1;                      # modules must return true
+1;			# modules must return true

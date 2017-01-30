@@ -1,20 +1,20 @@
 #!/usr/bin/perl
 #
 # Author:      Peter J. Acklam
-# Time-stamp:  2010-01-31 12:39:41 +01:00
+# Time-stamp:  2010-02-20 00:01:05 +01:00
 # E-mail:      pjacklam@cpan.org
 # URL:         http://home.online.no/~pjacklam
 
 ########################
 
-use 5.008;              # for the 'utf8' and 'warnings' pragmas
+use 5.008;              # required version of Perl
 use strict;             # restrict unsafe constructs
 use warnings;           # control optional warnings
-#use utf8;               # enable/disable UTF-8 (or UTF-EBCDIC) in source code
+use utf8;               # enable UTF-8 in source code
 
 ########################
 
-local $| = 1;
+local $| = 1;                   # disable buffering
 
 #BEGIN {
 #    chdir 't' if -d 't';
@@ -26,138 +26,127 @@ use Math::BigInt::Random::OO;
 use Math::BigInt;
 use Math::BigFloat;
 
-use Test::More tests => 5;
+print "1..70\n";
 
 my $class = 'Math::BigInt::Random::OO';
 
 ########################
 
-{
-    print <<"EOF";
+# bigint2str BIGINT, BASE
 #
-# \$x = $class -> new(length => 4) -> generate();
-#
-EOF
+# Converts a non-negative bigint to a string in the given base,
+# where 2 <= BASE <= 36.
 
-    my $x = $class -> new(length => 4) -> generate();
+sub bigint2str {
+    my $name = 'bigint2str';
+    my $bint = $_[0];   # clones the input
+    my $base = $_[1];
 
-    ok(defined($x) and
-       ref($x) eq 'Math::BigInt' and
-       length($x) == 4);
+    # Check the base.
+
+    die "$name: the base must be defined"
+      unless defined $base;
+    die "$name: the base must be an integer"
+      unless $base == int $base;
+    die "$name: the base must be in the range 2..36, inclusive"
+      if $base < 2 || $base > 36;
+
+    # Check the bigint.
+
+    die "$name: the bigint must be defined"
+      unless defined $bint;
+    die "$name: the bigint must be a Math::BigInt object"
+      unless UNIVERSAL::isa($bint, 'Math::BigInt');
+    die "$name: the bigint must be non-negative"
+      if $bint < 0;
+
+    # Quick exit when the bigint is zero.
+
+    if ($bint == 0) {
+        return '0';
+    }
+
+    # Set of symbols for each digit.
+
+    my $symset = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+    # Convert the bigint to a string.
+
+    my $str = '';
+    while ($bint > 0) {
+        my $num = $bint % $base;
+        my $sym = substr $symset, $num, 1;
+        $str = $sym . $str;
+        $bint /= $base;
+    }
+
+    return $str;
 }
 
 ########################
 
-{
-    my $len  = 37;
-    my $num  = 10;
+my $testno = 0;
 
-    print <<"EOF";
-#
-# \@x = $class -> new(length => $len) -> generate($num);
-#
-EOF
+for my $base (2, 4, 8, 10, 16, 25, 36) {
+    for my $len (5, 10, 20, 50, 100) {
+       TEST: for my $num (1, 50) {
 
-    my @x = $class -> new(length => $len) -> generate($num);
+            ++ $testno;
 
-    subtest 'each element in output array' => sub {
-        plan tests => 1 + 2 * $num;
-        ok(@x == $num, 'Number of elements in output array is correct');
-        for my $x (@x) {
-            isa_ok($x, 'Math::BigInt');
-            my $data = sprintf '%s', $x;
-            my $outlen = length $data;
-            ok($outlen == $len, "The length $outlen, expected is $len");
+            my $test = "\@x = $class -> new(length => $len, " .
+                                           "base => $base) -> generate($num)";
+
+            my @x = $class -> new(length => $len, base => $base)
+                           -> generate($num);
+
+            # Check the number of output arguments.
+
+            unless (@x == $num) {
+                print "not ok ", $testno, " - $test\n";
+                print "  wrong number of output arguments\n";
+                print "  actual number .........: ", scalar(@x), "\n";
+                print "  expected number .......: $num\n";
+                next TEST;
+            }
+
+            # Check each output argument.
+
+            for my $x (@x) {
+
+                unless (defined $x) {
+                    print "not ok ", $testno, " - $test\n";
+                    print "  array element was undefined\n";
+                    next TEST;
+                }
+
+                my $refx = ref $x;
+                unless ($refx eq 'Math::BigInt') {
+                    print "not ok ", $testno, " - $test\n";
+                    print "  array element was a ",
+                              $refx ? $refx : "Perl scalar",
+                              ", expected a Math::BigInt\n";
+                    next TEST;
+                }
+
+                my $str = bigint2str $x, $base;
+                my $strlen = length $str;
+
+                unless ($strlen == $len) {
+                    print "not ok ", $testno, " - $test\n";
+                    print "  output length is incorrect\n";
+                    print "  actual length .....: $strlen\n";
+                    print "  expected length ...: $len\n";
+                    next TEST;
+                }
+
+            }
+
+            print "ok ", $testno, " - $test\n";
         }
-    };
-}
-
-########################
-
-{
-    my $len  = 37;
-    my $base =  2;
-    my $num  = 10;
-
-    print <<"EOF";
-#
-# \@x = $class -> new(length => $len, base => $base) -> generate($num);
-#
-EOF
-
-    my @x = $class -> new(length => $len, base => $base) -> generate($num);
-
-    subtest 'each element in output array' => sub {
-        plan tests => 1 + 2 * $num;
-        ok(@x == $num, 'Number of elements in output array is correct');
-        for my $x (@x) {
-            isa_ok($x, 'Math::BigInt');
-
-            my $data = sprintf '%b', $x;
-            $data =~ s/^0b0*(\d)/$1/;
-            my $outlen = length $data;
-            ok($outlen == $len, "The length $outlen, expected is $len");
-        }
-    };
-}
-
-########################
-
-{
-    my $len  = 37;
-    my $base =  8;
-    my $num  = 10;
-
-    print <<"EOF";
-#
-# \@x = $class -> new(length => $len, base => $base) -> generate($num);
-#
-EOF
-
-    my @x = $class -> new(length => $len, base => $base) -> generate($num);
-
-    subtest 'each element in output array' => sub {
-        plan tests => 1 + 2 * $num;
-        ok(@x == $num, 'Number of elements in output array is correct');
-        for my $x (@x) {
-            isa_ok($x, 'Math::BigInt');
-            my $data = $x -> copy() -> as_oct();
-            $data =~ s/^0*(\d)/$1/;
-            my $outlen = length $data;
-            ok($outlen == $len, "The length $outlen, expected is $len");
-        }
-    };
-}
-
-########################
-
-{
-    my $len  = 37;
-    my $base = 16;
-    my $num  = 10;
-
-    print <<"EOF";
-#
-# \@x = $class -> new(length => $len, base => $base) -> generate($num);
-#
-EOF
-
-    my @x = $class -> new(length => $len, base => $base) -> generate($num);
-
-    subtest 'each element in output array' => sub {
-        plan tests => 1 + 2 * $num;
-        ok(@x == $num, 'Number of elements in output array is correct');
-        for my $x (@x) {
-            isa_ok($x, 'Math::BigInt');
-            my $data = $x -> copy() -> as_hex();
-            $data =~ s/^0x0*([\da-f])/$1/i;
-            my $outlen = length $data;
-            ok($outlen == $len, "The length $outlen, expected is $len");
-        }
-    };
+    }
 }
 
 # Emacs Local Variables:
-# Emacs coding: us-ascii-unix
+# Emacs coding: utf-8-unix
 # Emacs mode: perl
 # Emacs End:

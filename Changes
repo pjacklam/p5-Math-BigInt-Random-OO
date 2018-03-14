@@ -2,6 +2,10 @@
 
 Revision history for Perl extension Math::BigInt::Random::OO.
 
+0.04
+
+        - Remove file headers with author information.
+
 0.03  Sat Feb 20 11:38:41 2010
 
         - OO.pm: Catch the case when a parameter is undef.

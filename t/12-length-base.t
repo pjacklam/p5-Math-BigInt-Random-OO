@@ -1,11 +1,4 @@
 #!/usr/bin/perl
-#
-# Author:      Peter J. Acklam
-# Time-stamp:  2010-02-20 00:01:05 +01:00
-# E-mail:      pjacklam@cpan.org
-# URL:         http://home.online.no/~pjacklam
-
-########################
 
 use 5.008;              # required version of Perl
 use strict;             # restrict unsafe constructs

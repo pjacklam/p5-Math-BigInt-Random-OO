@@ -1,9 +1,4 @@
 # -*- mode: perl; coding: utf-8-unix; -*-
-#
-# Author:      Peter J. Acklam
-# Time-stamp:  2010-02-23 21:20:43 +01:00
-# E-mail:      pjacklam@online.no
-# URL:         http://home.online.no/~pjacklam
 
 package Math::BigInt::Random::OO;
 

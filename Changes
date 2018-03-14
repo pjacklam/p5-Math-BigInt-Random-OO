@@ -4,6 +4,8 @@ Revision history for Perl extension Math::BigInt::Random::OO.
 
 0.04
 
+	- Increment version number.
+
         - Remove file headers with author information.
 
 0.03  Sat Feb 20 11:38:41 2010

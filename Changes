@@ -1,5 +1,7 @@
 0.04 Not Released
 
+ - Add MANIFEST.SKIP file.
+
  - Format CHANGES according to CPAN::Changes::Spec. Add test file
    t/release-cpan-changes.t.
 

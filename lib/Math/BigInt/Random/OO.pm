@@ -285,9 +285,13 @@ sub new {
     # The value of $rand_mult * CORE::rand() is a random integer X in the range
     # 0 <= X < 2 ** $rand_bits.
 
-    my $range     = $self->{max} - $self->{min};
+    my $range = $self->{max} - $self->{min};
+
     my $rand_bits = $Config{randbits};
-    my $rand_mult = 2 ** $rand_bits;            # multiplier
+    $rand_bits-- if $rand_bits == 48;   # protect against broken drand48
+                                        # cf. CPAN RT #81931
+
+    my $rand_mult = 2 ** $rand_bits;    # multiplier
 
     # How many chunks, each of size $rand_bits bits, do we need? And what is
     # the size of the highest chunk.

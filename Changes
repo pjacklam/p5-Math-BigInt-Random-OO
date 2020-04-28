@@ -1,20 +1,17 @@
-0.04 Not Released
+0.04 2020-04-28
+
+ - Fix CPAN RT #81931 (thanks to DANAJ).
 
  - New MANIFEST.SKIP file based on the template in the ExtUtils-Manifest
    distribution.
 
- - Add test file t/release-test-version.t.
-
- - Add test file t/release-portability.t.
+ - Add more test files and update existing test files.
 
  - Add MANIFEST.SKIP file.
 
- - Format CHANGES according to CPAN::Changes::Spec. Add test file
-   t/release-cpan-changes.t.
+ - Format CHANGES according to CPAN::Changes::Spec.
 
- - Increment version number.
-
- - Remove file headers with author information.
+ - Miscellaneous "cosmetic" changes.
 
 0.03  2010-02-20
 

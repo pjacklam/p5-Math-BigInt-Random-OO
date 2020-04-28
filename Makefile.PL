@@ -11,13 +11,14 @@ WriteMakefile
    NAME                 => 'Math::BigInt::Random::OO',
    VERSION_FROM         => 'lib/Math/BigInt/Random/OO.pm',
    ABSTRACT_FROM        => 'lib/Math/BigInt/Random/OO.pm',
-   AUTHOR               => 'Peter J. Acklam <pjacklam@cpan.org>') : ()),
+   AUTHOR               => 'Peter John Acklam <pjacklam@gmail.com>',
+   MIN_PERL_VERSION     => 5.006,
 
    # A hash of modules that are required to run Makefile.PL itself, but not to
    # run the distribution.
 
    'CONFIGURE_REQUIRES' => {
-                            'ExtUtils::MakeMaker' => 0,
+                            'ExtUtils::MakeMaker' => 6.58,
                            },
 
    # A hash of modules that are needed to build the module but not run it.
@@ -26,13 +27,15 @@ WriteMakefile
 
    # A hash of modules that are needed to run the module.
 
-   'PREREQ_PM'          => {},
+   'PREREQ_PM'          => {
+                            'Math::BigInt'        => 1.80,
+                           },
 
    # A hash of modules that are needed to test the module but not run or build
    # it.
 
    'TEST_REQUIRES'      => {
-                            'Test::More'          => 0.94,
+                            'Test::More'          => 0.82,
                            },
 
    'LICENSE'            => 'perl_5',

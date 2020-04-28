@@ -34,20 +34,23 @@ Math::BigInt::Random::OO - generate uniformly distributed Math::BigInt objects
 
 =head1 SYNOPSIS
 
+=for test_synopsis
+no strict 'vars'
+
   use Math::BigInt::Random::OO;
 
   # Random numbers between 1e20 and 2e30:
 
-  my $gen = Math::BigInt::Random::OO -> new(min => "1e20",
-                                            min => "2e30");
+  $gen = Math::BigInt::Random::OO -> new(min => "1e20",
+                                         min => "2e30");
   $x = $gen -> generate();      # one number
   $x = $gen -> generate(1);     # ditto
   @x = $gen -> generate(100);   # 100 numbers
 
   # Random numbers with size fitting 20 hexadecimal digits:
 
-  my $gen = Math::BigInt::Random::OO -> new(length => 20,
-                                            base => 16);
+  $gen = Math::BigInt::Random::OO -> new(length => 20,
+                                         base => 16);
   @x = $gen -> generate(100);
 
 =head1 ABSTRACT
@@ -345,7 +348,6 @@ argument is given.
 sub generate {
     my $self    = shift;
     my $selfref = ref $self;
-    my $class   = $selfref || $self;
     my $name    = 'generate';
 
     # Check how the method is called.
@@ -582,11 +584,15 @@ your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-  perldoc Math::BigInt::Random::OO
+    perldoc Math::BigInt::Random::OO
 
 You can also look for information at:
 
 =over 4
+
+=item * GitHub Source Repository
+
+L<https://github.com/pjacklam/p5-Math-BigInt-Random-OO>
 
 =item * RT: CPAN's request tracker
 
@@ -596,21 +602,17 @@ L<http://rt.cpan.org/Public/Dist/Display.html?Name=Math-BigInt-Random-OO>
 
 L<http://cpanratings.perl.org/dist/Math-BigInt-Random-OO>
 
-=item * Search CPAN
+=item * MetaCPAN
 
-L<http://search.cpan.org/dist/Math-BigInt-Random-OO>
-
-=item * CPAN Testers PASS Matrix
-
-L<http://pass.cpantesters.org/distro/M/Math-BigInt-Random-OO.html>
-
-=item * CPAN Testers Reports
-
-L<http://www.cpantesters.org/distro/M/Math-BigInt-Random-OO.html>
+L<https://metacpan.org/release/Math-BigInt-Random-OO>
 
 =item * CPAN Testers Matrix
 
 L<http://matrix.cpantesters.org/?dist=Math-BigInt-Random-OO>
+
+=item * CPAN Testers Reports
+
+L<http://www.cpantesters.org/distro/M/Math-BigInt-Random-OO.html>
 
 =back
 
@@ -620,15 +622,14 @@ Math::BigInt::Random(3), Math::Random(3), Net::Random(3).
 
 =head1 AUTHOR
 
-Peter John Acklam, E<lt>pjacklam@cpan.orgE<gt>
+Peter John Acklam E<lt>pjacklam (at) gmail.comE<gt>.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2010 by Peter John Acklam E<lt>pjacklam@cpan.orgE<gt>
+Copyright 2010,2020 Peter John Acklam.
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.0 or,
-at your option, any later version of Perl 5 you may have available.
+This program is free software; you may redistribute it and/or modify it under
+the same terms as Perl itself.
 
 =cut
 

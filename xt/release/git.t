@@ -3,27 +3,44 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
-
 use IO::Pipe;
 use IO::File;
-use File::Which qw< which >;
+use IO::Dir;
+
+use File::Which    qw< which >;
 use Sort::Versions qw< versioncmp >;
 
-###############################################################################
+$| = 1;
+
+my $testno = 0;
+my $failno = 0;
+
+END {
+    print "1..$testno\n";
+    exit $failno == 0 ? 0 : 1;
+}
+
+################################################################################
 # See if we can find a "git" program.
-###############################################################################
+################################################################################
 
 my $git = which('git');
 
-ok($git, qq|found "git" program|)
-  or BAIL_OUT(qq|Unable to find the "git" program!|);
+print "not " unless $git;
+print "ok ", ++$testno, " - found 'git' program";
+print " ('$git')" if $git;
+print "\n";
 
-diag(qq|the "git" program is installed as "$git"|);
+# There is no point in continuing without the 'git' program.
 
-###############################################################################
+unless ($git) {
+    print STDERR "#   can't continue testing without a 'git' program\n";
+    exit 1;
+}
+
+################################################################################
 # See if we can get the "git" version number.
-###############################################################################
+################################################################################
 
 my $gitver;
 {
@@ -35,119 +52,199 @@ my $gitver;
       if defined $output;
 }
 
-ok($gitver, qq|got "git" version number|)
-  or BAIL_OUT(qq|Unable to get the "git" version number!|);
+unless ($gitver) {
+    print "not ";
+    $failno++;
+}
+print "ok ", ++$testno, " - found 'git' version number";
+print " ('$gitver')" if $gitver;
+print "\n";
 
-diag(qq|the "git" program is version "$gitver"|);
-
+################################################################################
 # See if the working directory is clean.
+################################################################################
 
 {
     my $pipe = IO::Pipe -> new();
     my @args = ('git', 'status', '--porcelain');
     $pipe -> reader(@args);
     my @output = <$pipe>;
-    ok(@output == 0, 'working directory is clean')
-      or diag(qq|  Expected no output from "@args", but got:\n\n|,
-              map("    $_", @output), "\n");
+    my $ok = @output == 0;
+    unless ($ok) {
+        print "not ";
+        $failno++;
+    }
+    print "ok ", ++$testno, " - working directory is clean\n";
+    unless ($ok) {
+        print STDERR "#   expected no output from '@args', but got:\n\n",
+          map("    $_", @output), "\n";
+    }
 }
 
-###############################################################################
-# See if the most recent tag matches the most recent entry in the change log.
-###############################################################################
+################################################################################
+# Search for changelog files.
+################################################################################
 
-# Get the tag with the highest version number.
+my @files;
 
-my $newest_tag;
+my $dh = IO::Dir -> new('.')
+  or die "can't open the current directory for reading: $!";
+
+for my $filename ($dh -> read()) {
+
+    # changelog, changelog.txt, changes, changes.log, changes.txt changes.log
+    next unless $filename =~ / ^
+                               (
+                                   changelog ( \. txt )?
+                               |
+                                   changes ( \. ( log | txt ) )?
+                               )
+                               $
+                             /ix && -f $filename;
+    my @info = stat(_);
+    my ($dev, $ino, $size) = @info[0, 1, 7];
+    push @files, $filename;
+}
+
+$dh -> close()
+  or die "can't close directory after reading: $!";
+
+unless (@files) {
+    print "not ";
+    $failno++;
+}
+print "ok ", ++$testno, " - found changelog file(s)";
+print " (", join(", ", map("'$_'", @files)), ")" if @files;
+print "\n";
+
+################################################################################
+# Read all changelog files, and sort all version numbers.
+################################################################################
+
+my @vers = ();
+
+for (my $i = 0 ; $i <= $#files ; $i++) {
+    my $filename = $files[$i];
+
+    my $fh = IO::File -> new($filename)
+      or die "$filename: can't open file for reading: $!\n";
+
+    while (defined(my $line = <$fh>)) {
+        if ($line =~ /^(\S+)/) {
+            my $verstr = $1;
+            if ($verstr =~ / ^ v? ( \d+ ( \. \d+ ( _ \d+ )* )? ) $ /ix) {
+                my $vernum = $1;
+                $vernum =~ tr/_//d;
+                push @vers, [ $verstr, $vernum ];
+                last;                   # only get the first one
+            } else {
+                printf STDERR "  Ignoring version number '%s' in %s line %u\n",
+                  $verstr, $filename, $.;
+            }
+        }
+    }
+
+    $fh -> close()
+      or die "$filename: can't close file after reading: $!\n";
+}
+
+# Sort the versions.
+
+#@vers = sort { versioncmp($a, $b) } @vers;
+
+unless (@vers) {
+    print "not ";
+    $failno++;
+}
+print "ok ", ++$testno, " - found version number(s) in changelog file(s)";
+print " ('$vers[0][0]')" if @vers;
+print "\n";
+
+################################################################################
+# Get the all the git tags that look like version numbers.
+################################################################################
+
+my @tags;
 {
     my $pipe = IO::Pipe -> new();
     my @args = ('git', 'tag', '-l');
     $pipe -> reader(@args);
-    my @tags = ();
     while (defined(my $tag = <$pipe>)) {
         $tag =~ s/\s+\z//;
-        push @tags, $tag;
+        if ($tag =~ / ^ v? ( \d+ ( \. \d+ ( _ \d+ )* )? ) /ix) {
+            my $vernum = $1;
+            $vernum =~ tr/_//d;
+            push @tags, [ $tag, $vernum ];
+        }
     }
     $pipe -> close() or die "can't close pipe after reading: $!";
-    @tags = sort { versioncmp($a, $b) } @tags;
-    $newest_tag = $tags[-1];
 }
 
-if (defined $newest_tag) {
-    diag(qq|the most recent git tag is "$newest_tag"|);
+# Sort the tags.
+
+#@tags = sort { versioncmp($b, $b) } @tags;
+@tags = sort { $b -> [1] <=> $a -> [1] } @tags;
+
+unless (@tags) {
+    print "not ";
+    $failno++;
+}
+print "ok ", ++$testno, " - found git tag(s)";
+print " ('", $tags[0][0], "')" if @tags;
+print "\n";
+
+################################################################################
+# Compare version number with git tag.
+################################################################################
+
+++$testno;
+if (@vers and @tags) {
+    my $ok = $vers[0][0] eq $tags[0][0];
+    unless ($ok) {
+        print "not ";
+        $failno++;
+    }
+    print "ok ", $testno, " - changelog version matches git tag\n";
+    print STDERR <<"EOF" unless $ok;
+#   latest version in changelog(s): $vers[0][0]
+#                   latest git tag: $tags[0][0]
+EOF
 } else {
-    diag(qq|no git tags found|);
+    print "ok ", $testno, " - skipped (missing version number or git tag)\n";
 }
 
-# See if we find a change log files.
-
-my $changes_file;
-my $num_changes_file;
-my @changes_files = ('CHANGES', 'Changes', 'ChangeLog', 'CHANGELOG');
-for my $file (@changes_files) {
-    next unless -f $file;
-    $changes_file = $file;
-}
-
-ok(defined($changes_file), qq|found change log file "$changes_file"|)
-  or diag("  Found no change log file. Tried: "
-          . join(", ", @changes_files));
-
-ok(-s($changes_file), 'changes file is non-empty')
-  or diag("  Change log file is empty");
-
-# Get the most recent version number in the changes file.
-
-my $changes_ver;
-SKIP: {
-    skip 'no changes file found', 1 unless defined $changes_file;
-
-    # Get first line in the changes file.
-
-    my $fh = IO::File -> new($changes_file)
-      or die "$changes_file: can't open file for reading: $!\n";
-    my $line = <$fh>;
-    $line =~ s/\s+\z//;
-    $fh -> close()
-      or die "$changes_file: can't close file after reading: $!\n";
-
-    # The version should be the first field on the line.
-    $changes_ver = (split /\s+/, $line)[0];
-}
-
-if (defined $changes_ver) {
-    diag(qq|the most recent change log version number is "$changes_ver"|);
-} else {
-    diag(qq|no change log version number found|);
-}
-
-BAIL_OUT('missing git tag and/or change log version number')
-  unless (defined($changes_ver) && defined($newest_tag));
-
-ok($changes_ver eq $newest_tag,
-   'most recent git tag matches most recent version in change log')
-  or diag("      most recent git tag: $newest_tag\n" .
-          "    version in change log: $changes_ver");
-
-###############################################################################
+################################################################################
 # See if the commit corresponding to the most recent tag is also the most
 # recent commit.
-###############################################################################
+################################################################################
 
 # Get the commit corresponding to the most recent tag.
 
 my $commit_tagged;
-{
+
+++$testno;
+if (@tags) {
     my $pipe = IO::Pipe -> new();
-    my @args = ('git', 'rev-parse', $newest_tag);
+    my @args = ('git', 'rev-parse', $tags[0][0]);
     $pipe -> reader(@args);
     $commit_tagged = <$pipe>;
     chomp $commit_tagged if defined $commit_tagged;
+
+    unless ($commit_tagged) {
+        print "not ";
+        $failno++;
+    }
+    print "ok ", $testno, " - tag ('$tags[0][0]') refers to a commit";
+    print " ('$commit_tagged')" if $commit_tagged;
+    print "\n";
+} else {
+    print "ok ", $testno, " - skipped (no tags found)\n";
 }
 
 # Get the most recent commit.
 
 my $commit_newest;
+
 {
     my $pipe = IO::Pipe -> new();
     my @args = ('git', 'log', '-n', '1', '--pretty=format:%H');
@@ -156,7 +253,32 @@ my $commit_newest;
     chomp $commit_newest if defined $commit_newest;;
 }
 
-ok($commit_tagged eq $commit_newest,
-   'the tagged commit is also the most recent commit')
-  or diag("    newest commit: $commit_newest\n" .
-          "    tagged commit: $commit_tagged");
+unless ($commit_newest) {
+    print "not ";
+    $failno++;
+}
+print "ok ", ++$testno, " - found most recent commit";
+print " ('$commit_newest')" if $commit_newest;
+print "\n";
+
+print STDERR "#   no commits found\n" unless $commit_newest;
+
+################################################################################
+# Compare the two commits.
+################################################################################
+
+++$testno;
+if (defined $commit_tagged and defined $commit_newest) {
+    my $ok = $commit_tagged eq $commit_newest;
+    unless ($ok) {
+        print "not ";
+        $failno++;
+    }
+    print "ok ", $testno, " - the tagged commit is also the most recent commit\n";
+    print STDERR <<"EOF" unless $ok;
+#   newest commit: $commit_newest
+#   tagged commit: $commit_tagged
+EOF
+} else {
+    print "ok ", $testno, " - skipped (missing commit(s))\n";
+}
